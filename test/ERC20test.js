@@ -1,35 +1,55 @@
 const { assertRevert } = require('../helpers/assertRevert');
 const expectEvent = require('../helpers/expectEvent');
-
-const ERC20Mock = artifacts.require('ERC20Mock');
-
+const Web3 = require('web3');
+const utils =  require('../web3util');
+var host = "http://localhost:8545";
+var web3 = new Web3(new Web3.providers.HttpProvider(host));
 const BigNumber = web3.BigNumber;
-
+var ERC20Mock;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-  // var MetaCoin = artifacts.require("MetaCoin");
+  async function deployedAddressERC20Mock(){
+    //this.timeout(3000);
+    if(ERC20Mock != undefined)
+      return;
+    
+    var ethAccountToUse = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
+    //var greeting1;
+    // Todo: Read ABI from dynamic source.
+    //var ERC20MockArray = utils.readSolidityContractJSON("../build/contracts/ERCMock.json");
+    var ERC20MockArray = utils.readSolidityContractJSON("/Users/rahulgolash/Rahul/Ledgerium/CoreLedgerium/testOpenZeppelinContracts/build/contracts/ERC20Mock.json");
+    if(ERC20MockArray.length <= 0){
+        return;
+    }
+    var constructorParameters = [];
+    constructorParameters.push("0xbaca639bd3430a754aa22a71e361c34f2b2b0828");
+    constructorParameters.push("1000000000000000000");
+    //value[0] = Contract ABI and value[1] =  Contract Bytecode
+    var deployedAddressERC20Mock = await utils.deployContract(ERC20MockArray[0], ERC20MockArray[1], ethAccountToUse, constructorParameters, web3);
+    
+    console.log("ERC20Mock deployedAddress ", deployedAddressERC20Mock);
+    ERC20Mock = new web3.eth.Contract(JSON.parse(ERC20MockArray[0]),deployedAddressERC20Mock);
+  }
 
-// contract('MetaCoin', function(accounts) {
-//   it("should put 10000 MetaCoin in the first account", function() {
-//     return MetaCoin.deployed().then(function(instance) {
-//       return instance.getBalance.call(accounts[0]);
-//     }).then(function(balance) {
-//       assert.equal(balance.valueOf(), 10000, "10000 wasn't in the first account");
-//     });
-//   });
-// });
-contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
+//accessEarlierGreeting();
+describe('ERC20', function () {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-  owner = _;
-  recipient = "0x44643353444f4b42b46ed28e668c204db6dbb7c3";
-  anotherAccount = "0x44643353444f4b42b46ed28e668c204db6dbb7c3";
+  const ERC20TestContract = "0x2A73b0BEd1518c44B1185835C41420B41511eF09";
+  owner = "0x44643353444f4b42b46ed28e668c204db6dbb7c3";
+  recipient = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
+  anotherAccount = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
   console.log("owner",owner);
   console.log("recipient",recipient);
   console.log("anotherAccount",anotherAccount);
-  beforeEach(async function () {
-    this.token = await ERC20Mock.new(owner, 100);
+  before(async function () {
+    var ERC20MockArray = utils.readSolidityContractJSON("/Users/rahulgolash/Rahul/Ledgerium/CoreLedgerium/testOpenZeppelinContracts/build/contracts/ERC20Mock.json");
+    if(ERC20MockArray.length <= 0){
+        return;
+    }
+    var ERC20MockAbi = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
+    this.token = ERC20MockAbi.at(ERC20TestContract);
   });
 
   describe('total supply', function () {
@@ -424,6 +444,7 @@ contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
 
     describe('for a non null account', function () {
       beforeEach('minting', async function () {
+        console.log("_mint - for a non null account - minting - recipient", recipient);
         const { logs } = await this.token.mint(recipient, amount);
         this.logs = logs;
       });
@@ -442,7 +463,6 @@ contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
           from: ZERO_ADDRESS,
           to: recipient,
         });
-
         event.args.value.should.be.bignumber.equal(amount);
       });
     });
@@ -457,6 +477,7 @@ contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
 
     describe('for a non null account', function () {
       it('rejects burning more than balance', async function () {
+        console.log("_burn - for a non null account - rejects burning more than balance - owner", owner);
         await assertRevert(this.token.burn(owner, initialSupply.plus(1)));
       });
 
@@ -482,7 +503,6 @@ contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
               from: owner,
               to: ZERO_ADDRESS,
             });
-
             event.args.value.should.be.bignumber.equal(amount);
           });
         });
@@ -543,7 +563,6 @@ contract('ERC20', function ([_, owner, recipient, anotherAccount]) {
               from: owner,
               to: ZERO_ADDRESS,
             });
-
             event.args.value.should.be.bignumber.equal(amount);
           });
         });
