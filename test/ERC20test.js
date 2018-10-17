@@ -1,42 +1,79 @@
 const { assertRevert } = require('../helpers/assertRevert');
 const expectEvent = require('../helpers/expectEvent');
-const Web3 = require('web3');
+const sendTransaction = require('../helpers/sendTransaction');
 const utils =  require('../web3util');
-var host = "http://localhost:8545";
-var web3 = new Web3(new Web3.providers.HttpProvider(host));
 const BigNumber = web3.BigNumber;
 var ERC20Mock;
+var ERC20TestContract;
 require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
   async function deployedAddressERC20Mock(){
-    //this.timeout(3000);
     if(ERC20Mock != undefined)
       return;
-    
-    var ethAccountToUse = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
-    //var greeting1;
+
+    // var version = web3.version.api;
+    // console.log(version); // "0.2.0"
+  
+    // var coinbase = web3.eth.coinbase;
+    // console.log(coinbase);
+
+    // var balance = web3.eth.getBalance(coinbase);
+    // console.log(balance.toString(10));
+
+    var ethAccountToUse = "0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed";
+    var privateKeyToUse = "83a5803e698a3642d5309f119643f6a729c7c51fac00fdffac31983cb5275bb5";
+    var ethAccountToUse1 = "0x645cab2686477cd244562d4bd95a75f157a4c055";
+    var privateKeyToUse1 = "9d698949e6ddb9086c34409b16f81c854ef2d7f73e020db7f896ed615efa25b1";
+
+    // sendTransaction.sendEther(ethAccountToUse,ethAccountToUse1,0);
+    // balance = web3.eth.getBalance(ethAccountToUse);
+    // console.log(balance.toString(10));
+
+    // balance = web3.eth.getBalance(ethAccountToUse1);
+    // console.log(balance.toString(10));
+
+    // var receipt = await utils.sendMethodTransactionOld(coinbase,ethAccountToUse,"0x00",
+    //                                "897c0cee04cadac8df147671bc0868c208c95c750d46be09f2d7b18b4efabdbb",
+    //                                web3,web3.toWei(15.0, "ether"));
+
+    // console.log("receipt - ", receipt);
+
     // Todo: Read ABI from dynamic source.
-    //var ERC20MockArray = utils.readSolidityContractJSON("../build/contracts/ERCMock.json");
-    var ERC20MockArray = utils.readSolidityContractJSON("/Users/rahulgolash/Rahul/Ledgerium/CoreLedgerium/testOpenZeppelinContracts/build/contracts/ERC20Mock.json");
+    var filename = __dirname + "/../build/contracts/ERC20Mock.json";
+    var ERC20MockArray = utils.readSolidityContractJSON(filename);
     if(ERC20MockArray.length <= 0){
         return;
     }
     var constructorParameters = [];
-    constructorParameters.push("0xbaca639bd3430a754aa22a71e361c34f2b2b0828");
+    constructorParameters.push("0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed");
     constructorParameters.push("1000000000000000000");
     //value[0] = Contract ABI and value[1] =  Contract Bytecode
-    var deployedAddressERC20Mock = await utils.deployContract(ERC20MockArray[0], ERC20MockArray[1], ethAccountToUse, constructorParameters, web3);
-    
-    console.log("ERC20Mock deployedAddress ", deployedAddressERC20Mock);
-    ERC20Mock = new web3.eth.Contract(JSON.parse(ERC20MockArray[0]),deployedAddressERC20Mock);
+    var deployedERC20MockAddress = await utils.deployContractOldWeb3(ERC20MockArray[0],ERC20MockArray[1], ethAccountToUse, privateKeyToUse,constructorParameters);//"0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed","1000000000000000000");
+
+    var mock20ERC = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
+    // var mock20ERC = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
+
+    // var deployedAddressERC20Mock = await mock20ERC.new({
+    //   from:ethAccountToUse,
+    //   gas:4476786,
+    //   data:ERC20MockArray[1]
+    // });
+
+    // receipt = web3.eth.getTransactionReceipt(deployedAddressERC20Mock.transactionHash.toString("hex"));
+    // console.log("ERC20Mock deployedAddress ", receipt.contractAddress);
+    // //ERC20Mock = new web3.eth.Contract(JSON.parse(ERC20MockArray[0]),receipt.contractAddress);
+    ERC20Mock = mock20ERC.at(deployedERC20MockAddress);
+    console.log(ERC20Mock);
+
+    //var ERC20Mock1 = mock20ERC.new("0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed","1000000000000000000",{from:})
   }
 
 //accessEarlierGreeting();
 describe('ERC20', function () {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-  const ERC20TestContract = "0x2A73b0BEd1518c44B1185835C41420B41511eF09";
+  ERC20TestContract = "0x2A73b0BEd1518c44B1185835C41420B41511eF09";
   owner = "0x44643353444f4b42b46ed28e668c204db6dbb7c3";
   recipient = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
   anotherAccount = "0xbaca639bd3430a754aa22a71e361c34f2b2b0828";
@@ -44,6 +81,8 @@ describe('ERC20', function () {
   console.log("recipient",recipient);
   console.log("anotherAccount",anotherAccount);
   before(async function () {
+    await deployedAddressERC20Mock();
+    
     var ERC20MockArray = utils.readSolidityContractJSON("/Users/rahulgolash/Rahul/Ledgerium/CoreLedgerium/testOpenZeppelinContracts/build/contracts/ERC20Mock.json");
     if(ERC20MockArray.length <= 0){
         return;

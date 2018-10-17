@@ -68,43 +68,64 @@ const utils = {
         }    
     },
 
-    async deployContractOldWeb3(contractAbi, bytecode, ownerAddress, constructorParameters, web3 /*callback*/) {
+    async deployContractOldWeb3(contractAbi, bytecode, fromAccountAddress, privateKey, constructorParameters) {
         console.log("deployContractOldWeb3");
         try{
-            let deployedContract = new web3.eth.contract(JSON.parse(contractAbi));
-            deployedAddress = await deployedContract.deploy({
-                data : bytecode, 
-                arguments: constructorParameters
-            })
-            .send({
-                from : ownerAddress,
-                gas : 5500000
-                //"privateFor" : privateFor
-            });
-            // .on('error', function(error){ 
-            //     if(!error)
-            //         console.log("error", error);
-            // })
-            // .on('receipt', receipt => {
-            //     deployedAddress = receipt.contractAddress;
-            //     // implement it on asysn await.
-            //     return deployedAddress;
-            // })
-            // .on('transactionHash', function(transactionHash){
-            //     console.log('transactionHash', transactionHash);
-            //     //web3.eth.getTransaction(transactionHash);
-            //     callback("transactionHash", transactionHash);
-            // })
-            // .then(transaction => {
-            //     console.log("transaction",transaction);
-            // });
-            return deployedAddress._address;
+            var myContract = web3.eth.contract(JSON.parse(contractAbi));
+            //constructorParameters.size()
+            //var param1 = "0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed", param2 = "1000000000000000000";
+            //var byteCodeWithParam = myContract.new.getData(param1,param2,{data: bytecode});
+            var byteCodeWithParam = myContract.new.getData(constructorParameters[0],constructorParameters[1],{data: bytecode});
+            nonceToUse = await web3.eth.getTransactionCount(fromAccountAddress, 'pending');
+            {
+                console.log("nonceToUse ",nonceToUse);
+                const txParams = {
+                    nonce: nonceToUse,
+                    gasPrice: '0x00',
+                    gasLimit: 4700000,
+                    from: fromAccountAddress,
+                    data: bytecode
+                }
+                const tx = new EthereumTx(txParams);
+                const privateKeyBuffer = new Buffer(privateKey, 'hex');
+                tx.sign(privateKeyBuffer);
+                const serializedTx = tx.serialize();
+
+                var receipt = await web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'));
+          
+                receipt = web3.eth.getTransactionReceipt(receipt);
+                console.log("ERC20Mock deployedAddress ", receipt.contractAddress);
+                return receipt.contractAddress;
+            }
         } catch (error) {
-            console.log("Exception in utils.deployContract(): " + error);
+            console.log("Exception in utils.deployContractOldWeb3(): " + error);
         }    
     },
     
-     async sendMethodTransaction (fromAccountAddress, toContractAddress, methodData, privateKey, web3, estimatedGas){//, calleeMethodName,callback) {
+    async sendMethodTransactionOld (fromAccountAddress, toContractAddress, methodData, privateKey, web3, value){//, calleeMethodName,callback) {
+        nonceToUse = await web3.eth.getTransactionCount(fromAccountAddress, 'pending');
+        {
+            console.log("nonceToUse ",nonceToUse);
+            const txParams = {
+                nonce: nonceToUse,
+                gasPrice: '0x00',
+                gasLimit: 4700000, //estimatedGas, //20000000, // Todo, estimate gas
+                from: fromAccountAddress,
+                to: toContractAddress,
+                value: value,
+                data: methodData
+            }
+            const tx = new EthereumTx(txParams)
+            const privateKeyBuffer = new Buffer(privateKey, 'hex');
+            tx.sign(privateKeyBuffer);
+            const serializedTx = tx.serialize();
+
+            receipt = await web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'));
+            return receipt;
+        }
+    },  
+    
+    async sendMethodTransaction (fromAccountAddress, toContractAddress, methodData, privateKey, web3, estimatedGas){//, calleeMethodName,callback) {
         nonceToUse = await web3.eth.getTransactionCount(fromAccountAddress, 'pending');
         {
             console.log("nonceToUse ",nonceToUse);
@@ -177,7 +198,7 @@ const utils = {
     },
 
     keccak (web3,text){
-        return web3.utils.keccak256(text);
+        return web3.sha3(text);
     },
 
     async sendTransaction(web3,transaction){
