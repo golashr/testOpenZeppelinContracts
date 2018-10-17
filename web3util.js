@@ -84,7 +84,7 @@ const utils = {
                     gasPrice: '0x00',
                     gasLimit: 4700000,
                     from: fromAccountAddress,
-                    data: bytecode
+                    data: byteCodeWithParam
                 }
                 const tx = new EthereumTx(txParams);
                 const privateKeyBuffer = new Buffer(privateKey, 'hex');
@@ -266,6 +266,37 @@ const utils = {
             return true;
         else (inputString == "0x0000000000000000000000000000000000000000000000000000000000000000")
             return false;
-    }
+    },
+
+    readContractsFromConfig(){
+        try{
+            var contractFileName = __dirname + "/keyStore/" + "contractsConfig.json";
+            var keyData = {};
+            if(fs.existsSync(contractFileName)){
+                keyData = fs.readFileSync(contractFileName,"utf8");
+                contractsList = JSON.parse(keyData);
+                if(contractsList["ERC20Mock"] != undefined){
+                    ERC20MockAddress = contractsList["ERC20Mock"];
+                    return ERC20MockAddress;
+                }    
+            }
+        }
+        catch (error) {
+            console.log("Error in readContractsFromConfig: " + error);
+        }
+    },   
+    
+    writeContractsINConfig(ERC20MockAddress){
+        try{
+            var contractFileName = __dirname + "/keyStore/" + "contractsConfig.json";
+            contractsList["ERC20Mock"] = ERC20MockAddress;
+        
+            var data = JSON.stringify(contractsList,null, 2);
+            fs.writeFileSync(contractFileName,data);
+        }
+        catch (error) {
+            console.log("Error in writeContractsINConfig: " + error);
+        }
+    }   
 }
 module.exports = utils;

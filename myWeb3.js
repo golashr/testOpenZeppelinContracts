@@ -114,35 +114,3 @@ async function readWritePrivateKeys(){
         console.log("Error in readWritePrivateKeys: " + error);
     }
 }
-
-async function readContractsFromConfig(){
-    try{
-        var contractFileName = __dirname + "/keyStore/" + "contractsConfig.json";
-        var keyData = {};
-        if(fs.existsSync(contractFileName)){
-            keyData = fs.readFileSync(contractFileName,"utf8");
-            contractsList = JSON.parse(keyData);
-            if(contractsList["adminValidatorSetAddress"] != undefined)
-                adminValidatorSetAddress = contractsList["adminValidatorSetAddress"];
-            if(contractsList["simpleValidatorSetAddress"] != undefined)    
-                simpleValidatorSetAddress= contractsList["simpleValidatorSetAddress"];
-        }
-    }
-    catch (error) {
-        console.log("Error in readContractsFromConfig: " + error);
-    }
-}    
-
-async function writeContractsINConfig(){
-    try{
-        var contractFileName = __dirname + "/keyStore/" + "contractsConfig.json";
-        contractsList["adminValidatorSetAddress"] = adminValidatorSetAddress;
-        contractsList["simpleValidatorSetAddress"] = simpleValidatorSetAddress;
-    
-        var data = JSON.stringify(contractsList,null, 2);
-        fs.writeFileSync(contractFileName,data);
-    }
-    catch (error) {
-        console.log("Error in writeContractsINConfig: " + error);
-    }
-}   

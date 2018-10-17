@@ -40,30 +40,37 @@ require('chai')
 
     // console.log("receipt - ", receipt);
 
+    var deployedERC20MockAddress = utils.readContractsFromConfig();
+    if(deployedERC20MockAddress == undefined){
+      
+      var constructorParameters = [];
+      constructorParameters.push("0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed");
+      constructorParameters.push("100");
+      //value[0] = Contract ABI and value[1] =  Contract Bytecode
+      deployedERC20MockAddress = await utils.deployContractOldWeb3(ERC20MockArray[0],ERC20MockArray[1], ethAccountToUse, privateKeyToUse,constructorParameters);//"0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed","1000000000000000000");
+
+      utils.writeContractsINConfig(deployedERC20MockAddress);
+      
+      // var mock20ERC = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
+
+      // var deployedAddressERC20Mock = await mock20ERC.new({
+      //   from:ethAccountToUse,
+      //   gas:4476786,
+      //   data:ERC20MockArray[1]
+      // });
+
+      // receipt = web3.eth.getTransactionReceipt(deployedAddressERC20Mock.transactionHash.toString("hex"));
+      // console.log("ERC20Mock deployedAddress ", receipt.contractAddress);
+      // //ERC20Mock = new web3.eth.Contract(JSON.parse(ERC20MockArray[0]),receipt.contractAddress);
+    }
+
     // Todo: Read ABI from dynamic source.
     var filename = __dirname + "/../build/contracts/ERC20Mock.json";
     var ERC20MockArray = utils.readSolidityContractJSON(filename);
     if(ERC20MockArray.length <= 0){
         return;
     }
-    var constructorParameters = [];
-    constructorParameters.push("0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed");
-    constructorParameters.push("1000000000000000000");
-    //value[0] = Contract ABI and value[1] =  Contract Bytecode
-    var deployedERC20MockAddress = await utils.deployContractOldWeb3(ERC20MockArray[0],ERC20MockArray[1], ethAccountToUse, privateKeyToUse,constructorParameters);//"0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed","1000000000000000000");
-
     var mock20ERC = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
-    // var mock20ERC = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
-
-    // var deployedAddressERC20Mock = await mock20ERC.new({
-    //   from:ethAccountToUse,
-    //   gas:4476786,
-    //   data:ERC20MockArray[1]
-    // });
-
-    // receipt = web3.eth.getTransactionReceipt(deployedAddressERC20Mock.transactionHash.toString("hex"));
-    // console.log("ERC20Mock deployedAddress ", receipt.contractAddress);
-    // //ERC20Mock = new web3.eth.Contract(JSON.parse(ERC20MockArray[0]),receipt.contractAddress);
     ERC20Mock = mock20ERC.at(deployedERC20MockAddress);
     console.log(ERC20Mock);
 
@@ -83,12 +90,13 @@ describe('ERC20', function () {
   before(async function () {
     await deployedAddressERC20Mock();
     
-    var ERC20MockArray = utils.readSolidityContractJSON("/Users/rahulgolash/Rahul/Ledgerium/CoreLedgerium/testOpenZeppelinContracts/build/contracts/ERC20Mock.json");
-    if(ERC20MockArray.length <= 0){
-        return;
-    }
-    var ERC20MockAbi = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
-    this.token = ERC20MockAbi.at(ERC20TestContract);
+    //var filename = __dirname + "/../build/contracts/ERC20Mock.json";
+    //var ERC20MockArray = utils.readSolidityContractJSON(filename);
+    //if(ERC20MockArray.length <= 0){
+      //  return;
+    //}
+    //var ERC20MockAbi = web3.eth.contract(JSON.parse(ERC20MockArray[0]));
+    this.token = ERC20Mock;//ERC20MockAbi.at(ERC20TestContract);
   });
 
   describe('total supply', function () {
