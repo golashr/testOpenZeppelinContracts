@@ -9,6 +9,7 @@ require('chai')
 setTimeout(function(){
 describe('ERC20', function () {
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+  
   before(function () {
     this.token = ERC20Mock;
   });
@@ -534,4 +535,6 @@ describe('ERC20', function () {
     });
   });
 });
+
+run();
 }, 8000);

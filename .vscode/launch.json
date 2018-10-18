@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
-            "args": ["--require=./myWeb3.js", "--timeout=100000", "--recursive"], //you can specify paths to specific tests here
+            "args": ["--require=./myWeb3.js", "--timeout=100000", "--recursive", "--delay"], //you can specify paths to specific tests here
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": {
