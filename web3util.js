@@ -290,10 +290,6 @@ const utils = {
             if(fs.existsSync(contractFileName)){
                 keyData = fs.readFileSync(contractFileName,"utf8");
                 contractsList = JSON.parse(keyData);
-                // if(contractsList["ERC20Mock"] != undefined){
-                //     ERC20MockAddress = contractsList["ERC20Mock"];
-                //     //return ERC20MockAddress;
-                // }
             }
             return contractsList;
         }
