@@ -95,9 +95,12 @@ const utils = {
                 tx.sign(privateKeyBuffer);
                 const serializedTx = tx.serialize();
 
-                var receipt = await web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'));
-          
-                receipt = web3.eth.getTransactionReceipt(receipt);
+                var transactionHash = await web3.eth.sendRawTransaction('0x' + serializedTx.toString('hex'));
+                var receipt;
+                do{
+                    receipt = await web3.eth.getTransactionReceipt(transactionHash);
+                }
+                while(receipt == null)
                 console.log("ERC20Mock deployedAddress ", receipt.contractAddress);
                 return receipt.contractAddress;
             }
@@ -291,8 +294,8 @@ const utils = {
                 //     ERC20MockAddress = contractsList["ERC20Mock"];
                 //     //return ERC20MockAddress;
                 // }
-                return contractsList;
             }
+            return contractsList;
         }
         catch (error) {
             console.log("Error in utils.readContractsFromConfig: " + error);
