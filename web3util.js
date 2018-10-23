@@ -7,9 +7,6 @@ const EthereumTx = require('ethereumjs-tx');
 var keythereum = require('keythereum');
 const ethUtil = require('ethereumjs-util');
 
-
-
-
 const utils = {
     async getCurrentTime () {
         return moment().format('YYYY-MM-DD HH:mm:ss').trim();
@@ -26,17 +23,16 @@ const utils = {
         }
     },
 
-    async getContractEncodeABI(abi,bytecode,web3,arg){
+    async getContractEncodeABI(abi,bytecode,arg){
         try{
             let contract = new web3.eth.Contract(JSON.parse(abi));
             return await contract.deploy({ data : bytecode, arguments : arg}).encodeABI();
-            //return await contract.deploy({ data : bytecode, arguments : arg, "privateFor" : privateFor }).encodeABI();
         } catch (error) {
             console.log("Exception in utils.getContractEncodeABI(): " + error);
         } 
     },
     
-    async deployContract(contractAbi, bytecode, ownerAddress, constructorParameters, web3 /*callback*/) {
+    async deployContract(contractAbi, bytecode, ownerAddress, constructorParameters) {
         console.log("deployContract");
         try{
             let deployedContract = new web3.eth.Contract(JSON.parse(contractAbi));
@@ -47,25 +43,7 @@ const utils = {
             .send({
                 from : ownerAddress,
                 gas : 5500000
-                //"privateFor" : privateFor
             });
-            // .on('error', function(error){ 
-            //     if(!error)
-            //         console.log("error", error);
-            // })
-            // .on('receipt', receipt => {
-            //     deployedAddress = receipt.contractAddress;
-            //     // implement it on asysn await.
-            //     return deployedAddress;
-            // })
-            // .on('transactionHash', function(transactionHash){
-            //     console.log('transactionHash', transactionHash);
-            //     //web3.eth.getTransaction(transactionHash);
-            //     callback("transactionHash", transactionHash);
-            // })
-            // .then(transaction => {
-            //     console.log("transaction",transaction);
-            // });
             return deployedAddress._address;
         } catch (error) {
             console.log("Exception in utils.deployContract(): " + error);
@@ -76,9 +54,6 @@ const utils = {
         console.log("deployContractOldWeb3");
         try{
             var myContract = web3.eth.contract(JSON.parse(contractAbi));
-            //constructorParameters.size()
-            //var param1 = "0xf232a4bf183cf17d09bea23e19ceff58ad9dbfed", param2 = "1000000000000000000";
-            //var byteCodeWithParam = myContract.new.getData(param1,param2,{data: bytecode});
             var byteCodeWithParam = myContract.new.getData(constructorParameters[0],constructorParameters[1],{data: bytecode});
             nonceToUse = await web3.eth.getTransactionCount(fromAccountAddress, 'pending');
             {
@@ -109,7 +84,7 @@ const utils = {
         }    
     },
     
-    async sendMethodTransactionOld (fromAccountAddress, toContractAddress, methodData, privateKey, web3, value){//, calleeMethodName,callback) {
+    async sendMethodTransactionOld (fromAccountAddress, toContractAddress, methodData, privateKey, value){
         try{
             nonceToUse = await web3.eth.getTransactionCount(fromAccountAddress, 'pending');
             {
@@ -348,7 +323,7 @@ const utils = {
         var noOfPrivateKeys = Object.keys(privateKey).length;
         var noOfAccounts = accountAddressList.length;
         if(noOfAccounts > 0 && noOfPrivateKeys > 0 && (noOfAccounts == noOfPrivateKeys)){
-            console.log("There are", accountAddressList.length, "ethereum accounts in the blockchain");
+            console.log("There are", accountAddressList.length, "accounts in the config file");
         }
         return [accountAddressList,privateKey];
     },
@@ -406,6 +381,44 @@ const utils = {
         catch (error) {
             console.log("Error in utils.readWritePrivateKeys: " + error);
         }
+    },
+
+    async personalImportAccount(privateKey,password){
+        var message = {
+            method: "personal_importRawKey",
+            params: [privateKey,password],
+            jsonrpc: "2.0",
+            id: new Date().getTime()
+            };
+        
+        await web3.currentProvider.send(message);
+        return;
+    },
+
+    async unlockPersonalAccount(account, password){
+        var message = {
+            method: "personal_unlockAccount",
+            params: [account,password],
+            jsonrpc: "2.0",
+            id: new Date().getTime()
+            };
+        
+        await web3.currentProvider.send(message);
+        return;
+    },
+
+    async lockPersonalAccount(account){
+        var message = {
+            method: "personal_lockAccount",
+            params: [account],
+            jsonrpc: "2.0",
+            id: new Date().getTime()
+            };
+        
+        await web3.currentProvider.send(message);
+        return;
     }
+
+    
 }
 module.exports = utils;
